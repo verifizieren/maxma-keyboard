@@ -138,10 +138,12 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
     uint8_t mods = get_mods();
 
     if (mods & MOD_MASK_CTRL) {
-        // Bare arrow, not C(KC_RGHT). Ctrl is already physically held, so the
-        // arrow picks it up on its own. Wrapping it would make QMK release the
-        // held Ctrl at the end of the tap, desyncing it from the physical key.
+        // Bare arrow so the physically-held Ctrl applies itself, but strip
+        // any other mods: Ctrl+Alt+Arrow is a Windows shortcut, not word jump.
+        const uint8_t others = mods & ~MOD_MASK_CTRL;
+        if (others) unregister_mods(others);
         tap_code(clockwise ? KC_RGHT : KC_LEFT);
+        if (others) register_mods(others);
         return false;
     }
 
