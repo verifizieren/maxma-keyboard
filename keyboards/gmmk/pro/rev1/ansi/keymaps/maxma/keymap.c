@@ -227,6 +227,14 @@ static void set_bar(uint8_t bar_x, uint8_t led_min, uint8_t led_max, uint8_t r, 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     // Past the warning threshold the board blinks red. Let go now and the
     // release lands under RESET_WIPE_MS; keep holding and it wipes.
+    //
+    // This return short-circuits before the magenta SOCD bar is ever drawn,
+    // so a red flash during a RESET_CFG hold hides that warning for as long
+    // as the hold lasts. Deliberate, not an oversight: RESET_CFG is a
+    // momentary, self-terminating hold (release within a couple of seconds
+    // either way), while SOCD armed is a persistent state the user already
+    // saw light up and will see again the instant this returns. Do not
+    // change this.
     if (reset_held && timer_elapsed32(reset_timer) >= RESET_WARN_MS) {
         const bool on = (timer_read() / 150) % 2;
         for (uint8_t i = led_min; i < led_max; i++) {
