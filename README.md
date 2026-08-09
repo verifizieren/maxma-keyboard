@@ -1,59 +1,94 @@
-# QMK Userspace
+# maxma-keyboard
 
-This is a template repository which allows for an external set of QMK keymaps to be defined and compiled. This is useful for users who want to maintain their own keymaps without having to fork the [main QMK repository](https://github.com/qmk/qmk_firmware). You must still fork the main QMK repository if writing firmware for a *new* keyboard.
+Custom QMK firmware for a Glorious GMMK Pro rev1 ANSI (`gmmk/pro/rev1/ansi`), keymap `maxma`. This
+is a [QMK userspace](https://docs.qmk.fm/newbs_external_userspace) repository — it holds only the
+owner's own keymap and configuration, not a fork of QMK itself.
 
-## Howto configure your build targets
+See [`keyboards/gmmk/pro/rev1/ansi/keymaps/maxma/readme.md`](keyboards/gmmk/pro/rev1/ansi/keymaps/maxma/readme.md)
+for what the keymap actually does — layer tables, the knob, the RGB indicators, NKRO behavior, and
+the SOCD cleaner (read that section before arming it). The hardware verification checklist is at
+[`keyboards/gmmk/pro/rev1/ansi/keymaps/maxma/testing.md`](keyboards/gmmk/pro/rev1/ansi/keymaps/maxma/testing.md).
 
-1. Run the normal `qmk setup` procedure if you haven't already done so -- see [QMK Docs](https://docs.qmk.fm/#/newbs) for details.
-1. Fork this repository
-1. Clone your fork to your local machine
-1. Enable userspace in QMK config using `qmk config user.overlay_dir="$(realpath qmk_userspace)"`
-1. Add a new keymap for your board using `qmk new-keymap`
-    * This will create a new keymap in the `keyboards` directory, in the same location that would normally be used in the main QMK repository. For example, if you wanted to add a keymap for the Planck, it will be created in `keyboards/planck/keymaps/<your keymap name>`
-    * You can also create a new keymap using `qmk new-keymap -kb <your_keyboard> -km <your_keymap>`
-    * Alternatively, add your keymap manually by placing it in the location specified above.
-    * `layouts/<layout name>/<your keymap name>/keymap.*` is also supported if you prefer the layout system
-1. Add your keymap(s) to the build by running `qmk userspace-add -kb <your_keyboard> -km <your_keymap>`
-    * This will automatically update your `qmk.json` file
-    * Corresponding `qmk userspace-remove -kb <your_keyboard> -km <your_keymap>` will delete it
-    * Listing the build targets can be done with `qmk userspace-list`
-1. Commit your changes
+## Layout
 
-## Howto build with GitHub
-
-1. In the GitHub Actions tab, enable workflows
-1. Push your changes above to your forked GitHub repository
-1. Look at the GitHub Actions for a new actions run
-1. Wait for the actions run to complete
-1. Inspect the Releases tab on your repository for the latest firmware build
-
-## Howto build locally
-
-1. Run the normal `qmk setup` procedure if you haven't already done so -- see [QMK Docs](https://docs.qmk.fm/#/newbs) for details.
-1. Fork this repository
-1. Clone your fork to your local machine
-1. `cd` into this repository's clone directory
-1. Set global userspace path: `qmk config user.overlay_dir="$(realpath .)"` -- you MUST be located in the cloned userspace location for this to work correctly
-    * This will be automatically detected if you've `cd`ed into your userspace repository, but the above makes your userspace available regardless of your shell location.
-1. Compile normally: `qmk compile -kb your_keyboard -km your_keymap` or `make your_keyboard:your_keymap`
-
-Alternatively, if you configured your build targets above, you can use `qmk userspace-compile` to build all of your userspace targets at once.
-
-## Extra info
-
-If you wish to point GitHub actions to a different repository, a different branch, or even a different keymap name, you can modify `.github/workflows/build_binaries.yml` to suit your needs.
-
-To override the `build` job, you can change the following parameters to use a different QMK repository or branch:
 ```
-    with:
-      qmk_repo: qmk/qmk_firmware
-      qmk_ref: master
+C:\Users\maxma\source\
+  qmk_firmware\        2023 QMK reference clone. Read-only, never modified.
+  qmk_firmware_new\    Current upstream QMK, pristine. Updated with `git pull`. Never edited.
+  maxma-keyboard\      This repo. github.com/verifizieren/maxma-keyboard
 ```
 
-If you wish to manually manage `qmk_firmware` using git within the userspace repository, you can add `qmk_firmware` as a submodule in the userspace directory instead. GitHub Actions will automatically use the submodule at the pinned revision if it exists, otherwise it will use the default latest revision of `qmk_firmware` from the main repository.
+Three directories, no overlap. `maxma-keyboard` is pointed at the QMK checkout once via QMK's
+userspace config (`qmk config user.overlay_dir=...`, see setup below); QMK reads this repo's
+`qmk.json` for build targets and compiles from `qmk_firmware_new`, but nothing owned by this repo
+ever lands inside the QMK clone. That's the reason for the split: because no file from here is ever
+written into `qmk_firmware_new`, updating QMK is a plain `git pull` there — it cannot produce a merge
+conflict, since there is nothing local for it to conflict with.
 
-This can also be used to control which fork is used, though only upstream `qmk_firmware` will have support for external userspace until other manufacturers update their forks.
+```
+maxma-keyboard/
+  qmk.json                                   build target list: gmmk/pro/rev1/ansi:maxma
+  README.md                                  this file
+  .github/workflows/build_binaries.yaml      CI: builds the target and publishes a Firmware artifact
+  modules/getreuer/                          git submodule (getreuer/qmk-modules) — SOCD cleaner
+  keyboards/gmmk/pro/rev1/ansi/keymaps/maxma/
+    keymap.c                                 layers, encoder, indicators, custom keycode, SOCD pairs
+    keymap.json                              declares the getreuer/socd_cleaner community module
+    config.h                                 compile-time configuration
+    rules.mk                                 feature toggles
+    readme.md                                keymap documentation — layer tables, knob, indicators
+    testing.md                               hardware verification checklist
+```
 
-1. (First time only) `git submodule add https://github.com/qmk/qmk_firmware.git`
-1. (To update) `git submodule update --init --recursive`
-1. Commit your changes to your userspace repository
+## One-time setup
+
+Requires `qmk` installed and set up already (`qmk setup`, see the
+[QMK docs](https://docs.qmk.fm/newbs_getting_started)). Then point QMK's userspace config at this
+clone:
+
+```
+qmk config user.overlay_dir=C:/Users/maxma/source/maxma-keyboard
+```
+
+This repo also uses a git submodule (`modules/getreuer`, the SOCD cleaner module) — clone with
+`--recurse-submodules`, or run `git submodule update --init --recursive` afterward if already
+cloned.
+
+## Build
+
+```
+qmk compile -kb gmmk/pro/rev1/ansi -km maxma
+```
+
+If `qmk` isn't on `PATH` directly (QMK MSYS on Windows), invoke it through the MSYS shell instead —
+note the single quotes; PowerShell corrupts `$(...)` inside double-quoted strings:
+
+```powershell
+$env:MSYSTEM='UCRT64'; $env:MSYS2_PATH_TYPE='inherit'; & "C:\QMK_MSYS\usr\bin\bash.exe" -lc 'cd /c/Users/maxma/source/maxma-keyboard && qmk compile -kb gmmk/pro/rev1/ansi -km maxma'
+```
+
+## Flash
+
+```
+qmk flash -kb gmmk/pro/rev1/ansi -km maxma
+```
+
+or load the built `.bin` in QMK Toolbox. The board must be in its bootloader first — **Fn+PrtSc**
+once this firmware is already flashed, or **Fn+\\** / **Fn+B** if it's still running the old
+`gourdo1` firmware for the very first flash.
+
+## CI
+
+Every push builds `gmmk/pro/rev1/ansi:maxma` via the reusable QMK userspace workflows
+(`qmk/.github`) and publishes the result as a `Firmware` artifact on the run. No manual `submodules:`
+checkout step is needed — the reusable build workflow handles submodule checkout itself.
+
+## Updating QMK
+
+```
+cd C:\Users\maxma\source\qmk_firmware_new
+git pull
+```
+
+Safe by construction: nothing owned by this repo is ever written into that clone, so there is
+nothing there to conflict with an upstream pull.
