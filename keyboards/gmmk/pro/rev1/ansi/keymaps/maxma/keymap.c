@@ -171,6 +171,24 @@ static bool encoder_dispatch(keyrecord_t *record) {
     const bool    clockwise = (record->event.type == ENCODER_CW_EVENT);
     const uint8_t mods      = get_mods();
 
+    if (mods & MOD_MASK_SHIFT) {
+        // Shift+turn extends the selection a word at a time: Ctrl+Shift+Arrow.
+        // Shift is already physically held, so only Ctrl needs adding — and
+        // only when it isn't already down, otherwise the unregister below
+        // would release the user's real Ctrl and desync it from the key.
+        // Checked before the Ctrl branch so Ctrl+Shift+turn selects too,
+        // rather than falling through to a plain word jump.
+        const uint8_t others   = mods & ~(MOD_MASK_SHIFT | MOD_MASK_CTRL);
+        const bool    add_ctrl = !(mods & MOD_MASK_CTRL);
+        if (others) unregister_mods(others);
+        if (add_ctrl) register_mods(MOD_BIT(KC_LCTL));
+        tap_code(clockwise ? KC_RGHT : KC_LEFT);
+        if (add_ctrl) unregister_mods(MOD_BIT(KC_LCTL));
+        if (others) register_mods(others);
+        consumed = true;
+        return false;
+    }
+
     if (mods & MOD_MASK_CTRL) {
         // Bare arrow so the physically-held Ctrl applies itself, but strip
         // any other mods: Ctrl+Alt+Arrow is a Windows shortcut, not word jump.

@@ -1,0 +1,158 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>GMMK Pro — maxma keymap</title>
+<style>
+  @page { size: A4; margin: 12mm 12mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; font-size: 9pt; line-height: 1.35;
+         color: #14161a; margin: 0; }
+  h1 { font-size: 17pt; margin: 0 0 1mm; letter-spacing: -.2px; }
+  .sub { color: #6b7280; font-size: 8pt; margin-bottom: 4mm; }
+  h2 { font-size: 10.5pt; margin: 0 0 1.5mm; padding-bottom: 1mm;
+       border-bottom: 1.5px solid #14161a; }
+  .cols { column-count: 2; column-gap: 7mm; }
+  .box { break-inside: avoid; margin-bottom: 4mm; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 1.1mm 0; vertical-align: top; border-bottom: .4px solid #e5e7eb; }
+  td.k { white-space: nowrap; width: 34%; padding-right: 2mm; }
+  kbd { font-family: Consolas, monospace; font-size: 8pt; background: #f3f4f6;
+        border: .6px solid #d1d5db; border-radius: 2.5px; padding: .3mm 1.2mm; }
+  .warn { background: #fef2f2; border: .8px solid #dc2626; border-radius: 2mm;
+          padding: 2.5mm 3mm; }
+  .warn strong { color: #b91c1c; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+         margin-right: 2px; vertical-align: middle; border: .4px solid rgba(0,0,0,.25); }
+  .note { color: #6b7280; font-size: 7.5pt; margin-top: 1.5mm; }
+  .foot { margin-top: 3mm; padding-top: 2mm; border-top: .4px solid #e5e7eb;
+          color: #9ca3af; font-size: 7pt; display: flex; justify-content: space-between; }
+</style></head><body>
+
+<h1>GMMK Pro — <span style="font-weight:400">maxma keymap</span></h1>
+<div class="sub">Base layer is stock ANSI except the right column and the Y/Z swap. Hold
+<kbd>Fn</kbd> for everything below — the keys that do something light up green.</div>
+
+<div class="cols">
+
+  <div class="box">
+    <h2>Right column &amp; base changes</h2>
+    <table>
+      <tr><td class="k">Below the knob</td><td>Del · Ins · Home · End</td></tr>
+      <tr><td class="k">Right of <kbd>T</kbd></td><td>types <b>z</b></td></tr>
+      <tr><td class="k">Right of <kbd>X</kbd></td><td>types <b>y</b></td></tr>
+      <tr><td class="k">Page Up / Down</td><td>moved to the Fn layer</td></tr>
+    </table>
+    <div class="note">Y/Z swapped to match German keycaps on a US Windows layout. Everything
+    else stays US.</div>
+  </div>
+
+  <div class="box">
+    <h2>The knob</h2>
+    <table>
+      <tr><td class="k">Turn</td><td>Volume</td></tr>
+      <tr><td class="k">Press</td><td>Mute</td></tr>
+      <tr><td class="k"><kbd>Fn</kbd> + turn</td><td>Colour (hue) — previews live</td></tr>
+      <tr><td class="k"><kbd>Fn</kbd> + press</td><td>Backlight on / off</td></tr>
+      <tr><td class="k"><kbd>Ctrl</kbd> + turn</td><td>Jump word by word</td></tr>
+      <tr><td class="k"><kbd>Shift</kbd> + turn</td><td>Select word by word</td></tr>
+      <tr><td class="k"><kbd>Alt</kbd> + turn</td><td>Previous / next track</td></tr>
+    </table>
+  </div>
+
+  <div class="box">
+    <h2>Fn — media &amp; system</h2>
+    <table>
+      <tr><td class="k"><kbd>F1</kbd> … <kbd>F4</kbd></td><td>Prev · Play/Pause · Next · Stop</td></tr>
+      <tr><td class="k"><kbd>F5</kbd> <kbd>F6</kbd> <kbd>F7</kbd></td><td>Mute · Vol− · Vol+</td></tr>
+      <tr><td class="k"><kbd>F8</kbd></td><td>Mic mute → sends Ctrl+Alt+Shift+M</td></tr>
+      <tr><td class="k"><kbd>F9</kbd> <kbd>F10</kbd></td><td>Scroll Lock · Pause/Break</td></tr>
+      <tr><td class="k"><kbd>Backspace</kbd></td><td>Delete</td></tr>
+      <tr><td class="k"><kbd>N</kbd></td><td>Num Lock</td></tr>
+      <tr><td class="k"><kbd>K</kbd></td><td>NKRO on / off (this session)</td></tr>
+      <tr><td class="k"><kbd>S</kbd></td><td>SOCD cleaner arm / disarm</td></tr>
+      <tr><td class="k"><kbd>PrtSc</kbd></td><td>Bootloader (for flashing)</td></tr>
+    </table>
+    <div class="note">F8 does nothing until you bind Ctrl+Alt+Shift+M as the mute hotkey in
+    Discord / OBS / Teams. No keyboard can mute a mic on its own.</div>
+  </div>
+
+  <div class="box">
+    <h2>Fn — navigation &amp; lighting</h2>
+    <table>
+      <tr><td class="k">Arrows <kbd>↑</kbd><kbd>↓</kbd></td><td>Page Up / Page Down</td></tr>
+      <tr><td class="k">Arrows <kbd>←</kbd><kbd>→</kbd></td><td>Home / End</td></tr>
+      <tr><td class="k"><kbd>Ins</kbd> <kbd>Home</kbd></td><td>Page Up / Page Down</td></tr>
+      <tr><td class="k"><kbd>−</kbd> <kbd>=</kbd></td><td>Brightness down / up</td></tr>
+      <tr><td class="k"><kbd>Esc</kbd> tap</td><td>Reset lighting to defaults</td></tr>
+      <tr><td class="k"><kbd>Esc</kbd> hold 2s</td><td><b>Wipes everything</b> — see below</td></tr>
+    </table>
+  </div>
+
+  <div class="box">
+    <h2>What the lights mean</h2>
+    <table>
+      <tr><td class="k"><span class="dot" style="background:#22c55e"></span>Green <kbd>=</kbd> key</td>
+          <td>All normal</td></tr>
+      <tr><td class="k"><span class="dot" style="background:#ef4444"></span>Red <kbd>=</kbd> key</td>
+          <td>SOCD armed, or NKRO off</td></tr>
+      <tr><td class="k"><span class="dot" style="background:#22c55e"></span>Green Caps</td>
+          <td>Caps Lock on</td></tr>
+      <tr><td class="k"><span class="dot" style="background:#3b82f6"></span>Blue <kbd>N</kbd></td>
+          <td>Num Lock on</td></tr>
+      <tr><td class="k"><span class="dot" style="background:#ef4444"></span>Red <kbd>F9</kbd></td>
+          <td>Scroll Lock on</td></tr>
+      <tr><td class="k"><span class="dot" style="background:#d946ef"></span>Magenta WASD</td>
+          <td>SOCD armed</td></tr>
+      <tr><td class="k"><span class="dot" style="background:#f59e0b"></span>Amber <kbd>K</kbd></td>
+          <td>NKRO off (while Fn held)</td></tr>
+      <tr><td class="k"><span class="dot" style="background:#ef4444"></span>Blinking red</td>
+          <td>About to wipe — let go now</td></tr>
+    </table>
+    <div class="note">Both side bars stay the baseline colour. Every indicator sits on the key it
+    refers to. The <kbd>=</kbd> key has a dead blue LED channel, so it is driven red/green only —
+    that is why it is the status light.</div>
+  </div>
+
+  <div class="box warn">
+    <h2 style="border-color:#dc2626">SOCD cleaner — read this</h2>
+    <p style="margin:0 0 1.5mm"><strong>Banned in Counter-Strike 2 and Valorant.</strong> Both
+    moved against this class of feature in 2024. Using it there risks your account. It is your
+    call and your responsibility.</p>
+    <table>
+      <tr><td class="k">What it does</td><td>A+D and W+S: last key pressed wins, instantly</td></tr>
+      <tr><td class="k">At every boot</td><td><b>Off.</b> Always. Never on by accident</td></tr>
+      <tr><td class="k">Arm / disarm</td><td><kbd>Fn</kbd>+<kbd>S</kbd></td></tr>
+      <tr><td class="k">While armed</td><td>WASD magenta, <kbd>=</kbd> key red</td></tr>
+    </table>
+  </div>
+
+  <div class="box">
+    <h2>Fn+Esc — the two resets</h2>
+    <table>
+      <tr><td class="k">Tap</td><td>Lighting back to defaults. Safe</td></tr>
+      <tr><td class="k">Hold ~1.5s</td><td>Board blinks red — <b>warning</b></td></tr>
+      <tr><td class="k">Let go on red</td><td>Nothing happens. Escape hatch</td></tr>
+      <tr><td class="k">Hold 2s+</td><td>Wipes EEPROM: VIA remaps, lighting, all</td></tr>
+    </table>
+    <div class="note">The red flash starts half a second before the wipe point on purpose — see
+    it, let go, nothing is lost.</div>
+  </div>
+
+  <div class="box">
+    <h2>Flashing — the trap</h2>
+    <p style="margin:0 0 1.5mm">VIA means the board types from EEPROM, not from the firmware. Flash
+    a changed keymap normally and <b>nothing happens</b> — it keeps using the stored one. Always
+    mass-erase:</p>
+    <table>
+      <tr><td class="k">Bootloader</td><td><kbd>Fn</kbd>+<kbd>PrtSc</kbd></td></tr>
+      <tr><td class="k">Then</td><td><code style="font-size:7.5pt">dfu-util -a 0 -d 0483:df11
+          -s 0x08000000:mass-erase:force -D firmware.bin</code></td></tr>
+      <tr><td class="k">Prebuilt .bin</td><td>GitHub → Actions → newest run → Firmware</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<div class="foot">
+  <span>github.com/verifizieren/maxma-keyboard</span>
+  <span>QMK · GMMK Pro rev1 ANSI · 4 VIA layers</span>
+</div>
+</body></html>

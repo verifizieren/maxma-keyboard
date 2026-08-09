@@ -97,20 +97,41 @@ the EEPROM wipe does.
 
 ## The knob
 
-Six behaviors: a plain turn/press, three modifier combinations, and Fn+press.
+Seven behaviors: a plain turn/press, four modifier combinations, and Fn+press.
 
 | Input | Result | Path | VIA-remappable? |
 |---|---|---|---|
 | turn | volume up / down | `encoder_map[_BASE]` | yes |
 | press | mute | ordinary matrix key | yes |
-| Fn + turn | RGB hue (colour) | `encoder_map[_FN]` | yes |
-| Ctrl + turn | previous / next **word** | custom code in `encoder_update_user` | no |
-| Alt + turn | previous / next **track** | custom code in `encoder_update_user` | no |
+| Fn + turn | RGB hue (colour), with live preview | `encoder_map[_FN]` | yes |
+| Shift + turn | **select** word by word | custom, `encoder_dispatch()` | no |
+| Ctrl + turn | jump word by word | custom, `encoder_dispatch()` | no |
+| Alt + turn | previous / next **track** | custom, `encoder_dispatch()` | no |
 | Fn + press | RGB matrix on / off | FN layer keymap entry (`RM_TOGG`) | yes |
 
 Fn+turn needs no custom code at all: Fn is a momentary layer, so holding it already selects
-`encoder_map[_FN]`. Only Ctrl and Alt need interception, because they're modifiers rather than
-layers — `encoder_map` has no way to see "Ctrl is held."
+`encoder_map[_FN]`. Only the modifiers need interception, because `encoder_map` has no way to see
+"Ctrl is held."
+
+### The knob logic is NOT in `encoder_update_user`. Do not move it there.
+
+This looks like the obvious home for it, and it is wrong. With `ENCODER_MAP_ENABLE` set, QMK's
+`encoder_handle()` (`quantum/encoder.c`) dispatches turns through `action_exec()` and only calls
+`encoder_update_kb`/`_user` in the `#else` branch — so with the map enabled **that hook is never
+invoked**. An implementation there compiles cleanly, passes review, and silently does nothing.
+
+It did exactly that here. Ctrl+turn and Alt+turn were written, reviewed three times, shipped, and
+never once ran. The bug surfaced only when the hue preview — added later to the same dead function
+— also failed to appear on hardware.
+
+Encoder turns instead arrive in `process_record_user` as keyrecords whose `event.type` is
+`ENCODER_CW_EVENT` or `ENCODER_CCW_EVENT`, which is where `encoder_dispatch()` handles them. Each
+turn fires a press *and* a release, so anything that consumes the press must consume the matching
+release too, or the encoder map's keycode gets registered and never released.
+
+**Shift+turn is checked before Ctrl+turn** so that Ctrl+Shift+turn extends the selection rather
+than falling through to a plain word jump. It adds Ctrl only when Ctrl isn't already physically
+held — otherwise the cleanup would release the user's real Ctrl.
 
 **Ctrl+turn taps a bare arrow key**, not `C(KC_RGHT)`. Ctrl is already physically held down, so the
 bare arrow picks the modifier up on its own. Wrapping it in `C(...)` would make QMK release the held
@@ -316,6 +337,18 @@ only cost is losing your VIA remaps and lighting settings.
 This also covers the first flash from the old `gourdo1` firmware: this keymap's
 `WEAR_LEVELING_BACKING_SIZE` (4096) differs from the platform default (2048), which relocates the
 emulated-EEPROM region, so the outgoing firmware's EEPROM would not validate anyway.
+
+## Cheatsheet
+
+A one-page printable summary of every binding lives at
+[`docs/cheatsheet.pdf`](../../../../../../docs/cheatsheet.pdf) in the repo root.
+
+Regenerate it after changing any binding — the HTML source sits next to it:
+
+```bash
+chrome --headless=new --no-pdf-header-footer \
+       --print-to-pdf=docs/cheatsheet.pdf docs/cheatsheet.html
+```
 
 ## Testing
 
