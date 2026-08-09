@@ -9,17 +9,19 @@ Firmware size at last build: **34476 bytes**.
 
 ## Base layer
 
-Stock GMMK Pro ANSI, with one change: the right-hand column below the knob reads **Del / Ins /
-Home / End** instead of stock's Del / Ins / Page Up / Page Down. Everything else — alphas, numbers,
-symbols, both shifts, Caps Lock, Print Screen, the arrow cluster — is unmodified stock.
+Stock GMMK Pro ANSI, with two changes: the right-hand column below the knob reads **Del / Ins /
+Home / End** instead of stock's Del / Page Up / Page Down / End — rows 1 and 4 (Del, End) match
+stock; rows 2 and 3 (Ins and Home, swapped in for Page Up and Page Down) are what changed.
+Everything else — alphas, numbers, symbols, both shifts, Caps Lock, Print Screen, the arrow
+cluster — is unmodified stock.
 
 | Right column (top → bottom) | Keycode |
 |---|---|
 | knob | *(press: mute, see knob table)* |
-| row 1 | `KC_DEL` |
-| row 2 | `KC_INS` |
-| row 3 | `KC_HOME` — **changed from stock `KC_PGUP`** |
-| row 4 | `KC_END` — **changed from stock `KC_PGDN`** |
+| row 1 | `KC_DEL` — unchanged from stock |
+| row 2 | `KC_INS` — **changed from stock `KC_PGUP`** |
+| row 3 | `KC_HOME` — **changed from stock `KC_PGDN`** |
+| row 4 | `KC_END` — unchanged from stock |
 
 Page Up and Page Down aren't lost — they move to the FN layer (see below), reachable in two places
 each.
