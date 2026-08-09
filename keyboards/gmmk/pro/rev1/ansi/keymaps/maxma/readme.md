@@ -80,8 +80,10 @@ band — a no-op, not a wipe. The outcome is only committed once you cross 2000 
 blink starts early rather than exactly at the threshold: without that lead time there would be no
 window to react in.
 
-The tap variant only touches lighting. The hold variant wipes everything, including VIA remaps and
-NKRO state.
+The tap variant only touches lighting. The hold variant wipes everything persisted, VIA remaps
+included. NKRO has no persisted state to wipe — it's a session-only RAM flag
+(`keyboard_post_init_user()`, `process_record_user()`) forced on at every boot regardless of what
+the EEPROM wipe does.
 
 ## The knob
 
