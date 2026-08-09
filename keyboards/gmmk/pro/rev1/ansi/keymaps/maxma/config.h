@@ -3,9 +3,11 @@
 
 #pragma once
 
-// NKRO on at every boot. Fn+K still toggles it off for the current session,
-// for a BIOS or KVM that chokes on it, but it never stays off silently.
-#define FORCE_NKRO
+// NKRO on at every boot. FORCE_NKRO was removed from QMK (2026-05-31
+// release), so this is enforced by hand in keyboard_post_init_user() in
+// keymap.c (keymap_config.nkro = true, no eeconfig write) instead of here.
+// Fn+K still toggles it off for the current session, for a BIOS or KVM that
+// chokes on it, but it never stays off silently — a replug forces it on.
 
 // Base, FN, and two spares to experiment with in VIA.
 // All four are present in keymaps[] and encoder_map[] — see keymap.c.

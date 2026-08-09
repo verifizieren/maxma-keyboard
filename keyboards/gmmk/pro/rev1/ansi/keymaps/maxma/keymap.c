@@ -162,6 +162,11 @@ void keyboard_post_init_user(void) {
     // Always come up disarmed, whatever was last set. A power cycle is the
     // guaranteed way back to a safe state.
     socd_cleaner_enabled = false;
+
+    // FORCE_NKRO was removed from QMK, so force it by hand. Set the live
+    // flag only — no eeconfig write — so Fn+K toggles for this session and
+    // a replug always comes back to NKRO on.
+    keymap_config.nkro = true;
 }
 
 // Both safety warnings live in rgb_matrix_indicators_advanced_user, which
