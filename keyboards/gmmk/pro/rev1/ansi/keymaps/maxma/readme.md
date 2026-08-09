@@ -5,7 +5,7 @@ and a knob that does more when a modifier is held. It replaces the `gourdo1` key
 ship on this board; nothing from that keymap was carried over except the two directly-useful ideas
 (indicator lighting, a knob with modifier awareness) — reimplemented from scratch, not ported.
 
-Firmware size at last build: **34476 bytes**.
+Firmware size at last build: **34492 bytes**.
 
 ## Base layer
 
