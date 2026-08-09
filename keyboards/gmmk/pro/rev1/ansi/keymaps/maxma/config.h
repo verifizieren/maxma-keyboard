@@ -96,7 +96,7 @@
 // Warm white. Neutral enough that the coloured indicators stand out.
 #    define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
 #    define RGB_MATRIX_DEFAULT_HUE 24
-#    define RGB_MATRIX_DEFAULT_SAT 60
+#    define RGB_MATRIX_DEFAULT_SAT 255
 #    define RGB_MATRIX_DEFAULT_VAL 150
 #    define RGB_MATRIX_DEFAULT_SPD 127
 #endif

@@ -9,9 +9,19 @@ Firmware size at last build: **34492 bytes**.
 
 ## Base layer
 
-Stock GMMK Pro ANSI, with two changes: the right-hand column below the knob reads **Del / Ins /
-Home / End** instead of stock's Del / Page Up / Page Down / End — rows 1 and 4 (Del, End) match
-stock; rows 2 and 3 (Ins and Home, swapped in for Page Up and Page Down) are what changed.
+Stock GMMK Pro ANSI, with two changes.
+
+**1. The right-hand column below the knob reads Del / Ins / Home / End** instead of stock's Del /
+Page Up / Page Down / End — rows 1 and 4 (Del, End) match stock; rows 2 and 3 (Ins and Home, swapped
+in for Page Up and Page Down) are what changed.
+
+**2. Y and Z are swapped.** The key right of T sends `KC_Z`; the key right of X sends `KC_Y`. This
+board has German (QWERTZ) keycaps but Windows is set to a US layout, so without the swap the
+legends lie — the cap printed Z would type `y`. The swap makes the output match the legends.
+**Only these two keys are swapped.** Everything else stays US, so symbols, brackets and quotes are
+where a US layout puts them, not where German keycaps might suggest. If you ever switch Windows to
+a German layout, undo this swap or you'll be double-swapped back to wrong.
+
 Everything else — alphas, numbers, symbols, both shifts, Caps Lock, Print Screen, the arrow
 cluster — is unmodified stock.
 
@@ -115,26 +125,39 @@ Ctrl+turn sends a word jump rather than a scroll event on purpose — Ctrl+scrol
 
 ## Indicators
 
-Baseline lighting is solid warm white (hue 24, sat 60, val 150). Everything below paints over it in
-`rgb_matrix_indicators_advanced_user()`.
+Baseline lighting is a solid colour, hue 24 / sat 255 / val 150 — orange. Everything below paints
+over it in `rgb_matrix_indicators_advanced_user()`.
+
+Saturation is deliberately full rather than the pale warm white this started as. At sat 60 the board
+is ~90% white, so rotating the hue only nudges the tint, and the brightness difference between pale
+yellow and pale blue makes the hue knob feel like a brightness dial. Turn saturation down in VIA if
+you want the pastel look back, and accept that the knob stops looking like it does anything.
 
 | Indicator | Color | Location | Trigger |
 |---|---|---|---|
-| Caps Lock on | green | Caps key + **left** bar | host Caps Lock state |
-| Num Lock on | blue | **left** bar | host Num Lock state, only if Caps and Scroll are both off |
-| Scroll Lock on | red | **left** bar | host Scroll Lock state, only if Caps is off |
-| SOCD armed | **magenta** | **right** bar | `socd_cleaner_enabled` |
+| Caps Lock on | green | **Caps key** | host Caps Lock state |
+| Num Lock on | blue | **N key** | host Num Lock state |
+| Scroll Lock on | red | **F9 key** | host Scroll Lock state |
+| SOCD armed | **magenta** | **W A S D** | `socd_cleaner_enabled` |
 | FN layer held | white on live keys, everything else dark | whole matrix | `layer_state_is(_FN)` |
 | NKRO off, Fn held | amber | K key | `!keymap_config.nkro`, only visible while Fn is held |
 | `RESET_CFG` past warning threshold | blinking red | whole matrix | held ≥1500 ms, see timing table above |
 
-**Left-bar precedence: Caps > Scroll > Num.** One bar, three possible claimants, so only one shows
-at a time — Caps Lock wins if more than one is active.
+**Nothing paints the side bars.** Both stay on the baseline colour so the left and right sides always
+match. Every indicator sits on the key it refers to instead.
 
-**The right bar is independent of the left bar on purpose.** It exists solely to carry the SOCD
-warning. If it shared the left bar's precedence chain, an active lock state (Caps, say) could hide
-an armed SOCD cleaner — exactly the failure a safety indicator can't have. Caps Lock on and SOCD
-armed at once shows green on the left and magenta on the right simultaneously.
+That is a deliberate reversal. The lock states originally lived on the left light bar and SOCD on
+the right, which meant the two sides were usually different colours for no reason the eye could
+read — and worse, Num Lock is on by default on most PCs, so the left bar was permanently blue. An
+indicator that is lit almost all the time carries no information. Putting each one on its own key
+means it only appears when it means something, and where you'd look for it.
+
+**No precedence chain is needed any more.** Caps, Num, Scroll and SOCD are on different keys, so any
+combination shows at once without competing.
+
+**The SOCD warning is still non-suppressible.** WASD is painted last in the loop, after the FN
+blackout, so holding Fn cannot hide it — and `housekeeping_task_user` still forces the matrix on if
+the lighting is off while SOCD is armed.
 
 **The knob doesn't light up under Fn** — see the FN table note above; `RM_TOGG` sits at the one
 position on the board with no LED.
@@ -203,10 +226,10 @@ reversal when both keys are briefly held together.
   `keyboard_post_init_user()` on every boot — a power cycle is always a safe reset, and the cleaner
   can never come on by accident.
 - **Fn+S (`SOCDTOG`) arms and disarms it.**
-- **The right light bar glows magenta for the entire time it is armed**, so the state is visible
-  before you launch anything — no need to hold a key or check a menu. See the indicator table above
-  for why this is the right bar specifically, and the section above that for why it stays visible
-  even with the backlight nominally off.
+- **W, A, S and D glow magenta for the entire time it is armed**, so the state is visible before you
+  launch anything — no need to hold a key or check a menu. The warning sits on the four keys the
+  cleaner actually alters, which is both where you'll look and a reminder of what it's doing. See
+  the indicator section above for why it stays visible even with the backlight nominally off.
 
 The module is Pascal Getreuer's `socd_cleaner`, pulled in as the community module
 `getreuer/socd_cleaner` via a git submodule (`modules/getreuer`, pointing at
@@ -259,11 +282,40 @@ definition) — that's expected and doesn't stop it from working.
 If this is the *first* flash and the board is still running the old `gourdo1` firmware, use that
 keymap's shortcut instead — **Fn+\\** or **Fn+B**.
 
-**After that first flash, before doing anything else:** do a Clear EEPROM in QMK Toolbox, or hold
-Fn+Esc for 3 seconds. This keymap's `WEAR_LEVELING_BACKING_SIZE` (4096) differs from the platform
-default (2048), which relocates the emulated-EEPROM region in flash — the outgoing gourdo1
-firmware's EEPROM won't validate against the new geometry, so clear it rather than let it be read
-as garbage.
+## Flashing: read this or you will lose an hour
+
+**With VIA enabled, the board does not type from `keymap.c`.** It types from a copy of the keymap
+held in EEPROM. The compiled `keymaps[]` only *seeds* that copy, once, when the EEPROM is
+initialised. The same is true of `encoder_map`.
+
+The consequence is deeply counter-intuitive: **change a key, rebuild, flash — and nothing happens.**
+The new firmware is genuinely on the board, and the board goes on serving the old keymap out of
+EEPROM. It looks exactly like a failed flash. It is not.
+
+Worse, `Fn+Esc` held for 3 seconds — the built-in EEPROM wipe — did **not** reliably reseed in
+practice. Three separate keymap changes were flashed and silently ignored before this was diagnosed.
+
+**So: whenever you change `keymap.c`, `config.h`, or `encoder_map`, flash with a mass erase.**
+
+```bash
+qmk compile -kb gmmk/pro/rev1/ansi -km maxma
+
+# board in bootloader, then:
+dfu-util -a 0 -d 0483:df11 -s 0x08000000:mass-erase:force \
+         -D gmmk_pro_rev1_ansi_maxma.bin
+```
+
+`mass-erase:force` wipes the entire flash, EEPROM region included, so there is nothing left to
+reseed *from* and the board is forced to rebuild the keymap from the firmware you just wrote. Then
+unplug and replug — `dfu-util` leaves the board in DFU otherwise.
+
+Plain `qmk flash` is fine when you have only changed code that isn't the keymap or the encoder map
+— indicator logic, `process_record_user`, `housekeeping_task_user`. When in doubt, mass erase; the
+only cost is losing your VIA remaps and lighting settings.
+
+This also covers the first flash from the old `gourdo1` firmware: this keymap's
+`WEAR_LEVELING_BACKING_SIZE` (4096) differs from the platform default (2048), which relocates the
+emulated-EEPROM region, so the outgoing firmware's EEPROM would not validate anyway.
 
 ## Testing
 

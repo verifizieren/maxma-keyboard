@@ -34,6 +34,14 @@ static bool     reset_held  = false;
 // toggle — see the RM_TOGG case below for why that matters.
 static bool rgb_forced_on = false;
 
+// Turning the knob on the FN layer adjusts hue — but the FN layer also blacks
+// the board out to highlight its own keys, so you'd be picking a colour you
+// cannot see. Any FN-layer knob turn opens a short window during which the
+// highlight steps aside and the real colour shows through.
+#define RGB_PREVIEW_MS 5000
+static uint32_t rgb_preview_timer = 0;
+static bool     rgb_preview       = false;
+
 // SOCD cleaning for the two WASD axes. LAST resolution: the most recently
 // pressed key wins, and releasing it reactivates the still-held opposite —
 // so a strafe reversal has no dead moment.
@@ -168,6 +176,14 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         return false;
     }
 
+    // No modifier claimed it, so encoder_map handles it. On the FN layer that
+    // is a hue change — open the preview window so the FN blackout steps aside
+    // and the colour being set is actually visible.
+    if (layer_state_is(_FN)) {
+        rgb_preview_timer = timer_read32();
+        rgb_preview       = true;
+    }
+
     return true;
 }
 
@@ -233,12 +249,23 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         return false;
     }
 
-    const led_t leds    = host_keyboard_led_state();
-    const bool  fn_held = layer_state_is(_FN);
+    const led_t leds = host_keyboard_led_state();
 
-    if (fn_held) {
-        // Black out the range first, then light only what the layer defines.
-        // Recognition instead of recall — the whole point of this indicator.
+    // A recent FN-layer knob turn opens the preview window. It closes on its
+    // own once you stop turning.
+    if (rgb_preview && timer_elapsed32(rgb_preview_timer) >= RGB_PREVIEW_MS) {
+        rgb_preview = false;
+    }
+
+    const bool fn_held = layer_state_is(_FN);
+
+    // The blackout — not the green highlight — is what the preview suspends.
+    // Normally holding Fn darkens every key the layer doesn't use, so the
+    // functional ones stand out. But that also hides the colour you are
+    // dialling in with the knob, so while the preview window is open the
+    // unused keys keep showing the live hue and only the functional keys are
+    // overpainted. Stop turning, wait it out, and the blackout returns.
+    if (fn_held && !rgb_preview) {
         for (uint8_t i = led_min; i < led_max; i++) {
             rgb_matrix_set_color(i, 0, 0, 0);
         }
@@ -255,7 +282,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             if (fn_held) {
                 const uint16_t fn_kc = keymap_key_to_keycode(_FN, pos);
                 if (fn_kc != KC_TRNS && fn_kc != KC_NO) {
-                    rgb_matrix_set_color(idx, RGB_WHITE);
+                    rgb_matrix_set_color(idx, RGB_GREEN);
                 }
                 // Amber on the NKRO key while NKRO is off, so the warning is
                 // only present when you are already looking at the layer.
@@ -286,6 +313,25 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             if (socd_cleaner_enabled &&
                 (base_kc == KC_W || base_kc == KC_A || base_kc == KC_S || base_kc == KC_D)) {
                 rgb_matrix_set_color(idx, RGB_MAGENTA);
+            }
+
+            // Status light on '='. Green when the board is in its normal
+            // state, red when anything is off-normal — SOCD armed, or NKRO
+            // dropped to 6KRO. One glance, before joining a game.
+            //
+            // It also sits on the one LED whose blue channel is physically
+            // dead, which would otherwise render every blue-ish hue as
+            // yellow. Driving it red-or-green only means that fault can
+            // never show: neither colour needs blue. Deliberate placement,
+            // not a coincidence — if that LED is ever repaired or the board
+            // replaced, this can move anywhere.
+            if (base_kc == KC_EQL) {
+                const uint8_t v = rgb_matrix_get_val();  // track board brightness
+                if (socd_cleaner_enabled || !keymap_config.nkro) {
+                    rgb_matrix_set_color(idx, v, 0, 0);  // red: something needs attention
+                } else {
+                    rgb_matrix_set_color(idx, 0, v, 0);  // green: all normal
+                }
             }
         }
     }

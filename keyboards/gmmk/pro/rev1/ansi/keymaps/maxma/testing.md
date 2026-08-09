@@ -20,6 +20,7 @@ broken indicator are hard to read.
 ## 1. Base layer
 
 - [ ] Right column, top to bottom below the knob, types: **Del, Ins, Home, End**
+- [ ] **Key right of T types `z`; key right of X types `y`** (matches the German keycaps)
 - [ ] Print Screen (left of the knob) still takes a screenshot
 - [ ] Alphas, numbers, symbols, both shifts, arrows all type correctly
 - [ ] Caps Lock toggles caps normally
@@ -123,7 +124,7 @@ without launching a game.
 
 Safe paths first.
 
-- [ ] Change the colour in VIA or the brightness with Fn+`=`. **Tap** Fn+Esc → warm white at default
+- [ ] Change the colour in VIA or the brightness with Fn+`=`. **Tap** Fn+Esc → the default colour at default
       brightness returns
 - [ ] Turn the backlight off with Fn+knob, then **tap** Fn+Esc → the backlight comes back **on** at
       warm white, default brightness. The tap forces the matrix on before applying the defaults —
