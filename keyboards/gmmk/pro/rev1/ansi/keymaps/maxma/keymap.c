@@ -273,6 +273,17 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
+        case NK_TOGG:
+            // Handle NKRO ourselves rather than letting process_magic have it.
+            // process_magic re-reads keymap_config from EEPROM before toggling
+            // and writes it back, which would both desync it from the RAM flag
+            // keyboard_post_init_user sets AND make the toggle persist. The
+            // user wants NKRO forced on at every boot, with this key toggling
+            // for the current session only.
+            if (record->event.pressed) {
+                keymap_config.nkro = !keymap_config.nkro;
+            }
+            return false;
         case RESET_CFG:
             if (record->event.pressed) {
                 reset_timer = timer_read32();
