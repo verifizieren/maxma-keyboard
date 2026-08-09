@@ -28,6 +28,12 @@ enum custom_keycodes {
 static uint32_t reset_timer = 0;
 static bool     reset_held  = false;
 
+// Tracks whether housekeeping_task_user is the one currently holding the RGB
+// matrix on. File-scope (not local to housekeeping_task_user) so
+// process_record_user can clear it the instant the user presses the real
+// toggle — see the RM_TOGG case below for why that matters.
+static bool rgb_forced_on = false;
+
 // SOCD cleaning for the two WASD axes. LAST resolution: the most recently
 // pressed key wins, and releasing it reactivates the still-held opposite —
 // so a strafe reversal has no dead moment.
@@ -174,12 +180,20 @@ void keyboard_post_init_user(void) {
 // Both safety warnings live in rgb_matrix_indicators_advanced_user, which
 // QMK skips entirely while the matrix is disabled. Neither warning may be
 // silently suppressible, so arming SOCD or crossing the reset warning
-// threshold forces the lighting back on.
+// threshold forces the lighting back on. Once the warning clears, undo only
+// what we ourselves forced — rgb_forced_on is the latch that makes that
+// possible, and the RM_TOGG case in process_record_user is what keeps it
+// honest if the user reaches for Fn+knob while a warning is showing.
 void housekeeping_task_user(void) {
     const bool needs_warning = socd_cleaner_enabled ||
                                (reset_held && timer_elapsed32(reset_timer) >= RESET_WARN_MS);
+
     if (needs_warning && !rgb_matrix_is_enabled()) {
         rgb_matrix_enable_noeeprom();  // noeeprom: don't clobber the saved preference
+        rgb_forced_on = true;
+    } else if (!needs_warning && rgb_forced_on) {
+        rgb_matrix_disable_noeeprom();  // only ever undo our own override
+        rgb_forced_on = false;
     }
 }
 
@@ -284,6 +298,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 keymap_config.nkro = !keymap_config.nkro;
             }
             return false;
+        case RM_TOGG:
+            // The user might reach for the real toggle while a safety
+            // warning is holding the matrix on. Don't try to guess what
+            // they landed on — just drop our "we forced this" claim and let
+            // the very next housekeeping tick re-derive it from the actual
+            // enabled state. If the warning is still live and the matrix is
+            // now off, housekeeping re-forces it and re-claims ownership
+            // (the warning is intentionally not user-suppressible). If the
+            // user's press left it genuinely on, we won't wrongly own it,
+            // so we won't turn it back off when the warning clears.
+            rgb_forced_on = false;
+            return true;
         case RESET_CFG:
             if (record->event.pressed) {
                 reset_timer = timer_read32();
