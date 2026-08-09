@@ -321,6 +321,26 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 if (held < RESET_TAP_MS) {
                     // Tap: lighting back to the compiled defaults. These are
                     // the eeprom-saving variants, so the reset persists.
+                    //
+                    // rgb_matrix_mode_eeprom_helper and
+                    // rgb_matrix_sethsv_eeprom_helper both bail out at their
+                    // very first line if the matrix is currently disabled
+                    // (rgb_matrix.c:581,633 in upstream QMK) — only
+                    // rgb_matrix_set_speed_eeprom_helper (:722) lacks that
+                    // guard. So with the backlight off, the three calls below
+                    // would silently apply speed alone and skip mode/HSV,
+                    // leaving this documented recovery path half-broken in
+                    // exactly the state a user is likeliest to reach for it.
+                    //
+                    // Force it on first. RGB_MATRIX_DEFAULT_ON is true, so
+                    // "on" is itself part of the compiled default this tap is
+                    // restoring, not an extra side effect.
+                    rgb_matrix_enable();
+                    // That "on" is real and saved, not a warning override —
+                    // don't let a stale forced-on latch undo it once whatever
+                    // warning is showing (if any) later clears. Same reason
+                    // RM_TOGG below drops the latch.
+                    rgb_forced_on = false;
                     rgb_matrix_mode(RGB_MATRIX_DEFAULT_MODE);
                     rgb_matrix_sethsv(RGB_MATRIX_DEFAULT_HUE, RGB_MATRIX_DEFAULT_SAT, RGB_MATRIX_DEFAULT_VAL);
                     rgb_matrix_set_speed(RGB_MATRIX_DEFAULT_SPD);
