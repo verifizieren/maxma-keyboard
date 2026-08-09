@@ -6,6 +6,12 @@ later sections assume earlier ones passed.
 **Before you start:** your board is still running the gourdo1 firmware, so the bootloader shortcut
 for this *first* flash is **Fn+\\** (or Fn+B). After this flash it becomes **Fn+PrtSc**.
 
+**Immediately after that first flash, before starting the checklist below:** do a Clear EEPROM in
+QMK Toolbox, or hold Fn+Esc for 3 seconds. This keymap sets `WEAR_LEVELING_BACKING_SIZE 4096`
+against the platform default of 2048, which moves the emulated-EEPROM region to a different offset
+in flash — the outgoing gourdo1 firmware's EEPROM contents won't validate against the new geometry,
+so start from a known-clean slate rather than carrying over whatever garbage that mismatch produces.
+
 If something fails, note which item and stop rather than continuing — the failures downstream of a
 broken indicator are hard to read.
 

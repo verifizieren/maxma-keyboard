@@ -259,6 +259,12 @@ definition) — that's expected and doesn't stop it from working.
 If this is the *first* flash and the board is still running the old `gourdo1` firmware, use that
 keymap's shortcut instead — **Fn+\\** or **Fn+B**.
 
+**After that first flash, before doing anything else:** do a Clear EEPROM in QMK Toolbox, or hold
+Fn+Esc for 3 seconds. This keymap's `WEAR_LEVELING_BACKING_SIZE` (4096) differs from the platform
+default (2048), which relocates the emulated-EEPROM region in flash — the outgoing gourdo1
+firmware's EEPROM won't validate against the new geometry, so clear it rather than let it be read
+as garbage.
+
 ## Testing
 
 A full hardware verification checklist lives at
