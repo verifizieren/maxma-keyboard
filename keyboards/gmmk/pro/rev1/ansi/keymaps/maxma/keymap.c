@@ -25,7 +25,7 @@ enum custom_keycodes {
 #define RESET_WARN_MS 1500  // from here, flash red
 #define RESET_WIPE_MS 2000  // at or above this, release wipes EEPROM
 
-static uint16_t reset_timer = 0;
+static uint32_t reset_timer = 0;
 static bool     reset_held  = false;
 
 // SOCD cleaning for the two WASD axes. LAST resolution: the most recently
@@ -189,7 +189,7 @@ static void set_bar(uint8_t bar_x, uint8_t led_min, uint8_t led_max, uint8_t r, 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     // Past the warning threshold the board blinks red. Let go now and the
     // release lands under RESET_WIPE_MS; keep holding and it wipes.
-    if (reset_held && timer_elapsed(reset_timer) >= RESET_WARN_MS) {
+    if (reset_held && timer_elapsed32(reset_timer) >= RESET_WARN_MS) {
         const bool on = (timer_read() / 150) % 2;
         for (uint8_t i = led_min; i < led_max; i++) {
             rgb_matrix_set_color(i, on ? 0xFF : 0x00, 0, 0);
@@ -256,10 +256,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case RESET_CFG:
             if (record->event.pressed) {
-                reset_timer = timer_read();
+                reset_timer = timer_read32();
                 reset_held  = true;
             } else {
-                const uint16_t held = timer_elapsed(reset_timer);
+                const uint32_t held = timer_elapsed32(reset_timer);
                 reset_held = false;
 
                 if (held < RESET_TAP_MS) {
