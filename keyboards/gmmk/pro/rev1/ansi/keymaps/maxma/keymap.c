@@ -164,6 +164,18 @@ void keyboard_post_init_user(void) {
     socd_cleaner_enabled = false;
 }
 
+// Both safety warnings live in rgb_matrix_indicators_advanced_user, which
+// QMK skips entirely while the matrix is disabled. Neither warning may be
+// silently suppressible, so arming SOCD or crossing the reset warning
+// threshold forces the lighting back on.
+void housekeeping_task_user(void) {
+    const bool needs_warning = socd_cleaner_enabled ||
+                               (reset_held && timer_elapsed32(reset_timer) >= RESET_WARN_MS);
+    if (needs_warning && !rgb_matrix_is_enabled()) {
+        rgb_matrix_enable_noeeprom();  // noeeprom: don't clobber the saved preference
+    }
+}
+
 // Indicators.
 //
 // No LED index is hard-coded. Key LEDs are found by asking the keymap what
