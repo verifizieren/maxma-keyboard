@@ -141,15 +141,35 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 
 // Knob dispatch.
 //
-// Returning true hands the event to encoder_map, which is the path VIA can
-// remap — so the plain turn and the Fn+turn stay user-configurable. Only
-// modifiers are intercepted here, because a modifier is not a layer and
-// encoder_map cannot see it.
+// NOT in encoder_update_user(). With ENCODER_MAP_ENABLE, QMK's encoder_handle
+// (quantum/encoder.c) sends turns straight to action_exec() and only calls
+// encoder_update_kb/_user in the #else branch — so with the map enabled that
+// hook is never invoked at all. An implementation there compiles, reviews
+// clean, and silently does nothing.
 //
-// Fn deliberately does NOT appear below: Fn is a momentary layer, so holding
-// it already selects encoder_map[_FN].
-bool encoder_update_user(uint8_t index, bool clockwise) {
-    uint8_t mods = get_mods();
+// Encoder turns instead arrive here as keyrecords carrying ENCODER_CW_EVENT /
+// ENCODER_CCW_EVENT, so the modifier handling lives in process_record_user.
+// Returning true falls through to the encoder_map keycode, which is the path
+// VIA can remap.
+//
+// Fn is deliberately not a case below: it is a momentary layer, so holding it
+// already selects encoder_map[_FN].
+static bool encoder_dispatch(keyrecord_t *record) {
+    // Every turn fires a press and then a release. Act on the press; if we
+    // consumed it, consume the matching release too, otherwise the encoder
+    // map's keycode would be registered and never released.
+    static bool consumed = false;
+
+    if (!record->event.pressed) {
+        if (consumed) {
+            consumed = false;
+            return false;
+        }
+        return true;
+    }
+
+    const bool    clockwise = (record->event.type == ENCODER_CW_EVENT);
+    const uint8_t mods      = get_mods();
 
     if (mods & MOD_MASK_CTRL) {
         // Bare arrow so the physically-held Ctrl applies itself, but strip
@@ -158,6 +178,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         if (others) unregister_mods(others);
         tap_code(clockwise ? KC_RGHT : KC_LEFT);
         if (others) register_mods(others);
+        consumed = true;
         return false;
     }
 
@@ -170,20 +191,21 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         // Alt to ride along on. A register_mods(held_alt) here would instead
         // emit a fresh Alt-down in the *keyboard* report with no keypress
         // between it and the eventual physical release, which Windows reads
-        // as an isolated Alt tap and pops the menu bar — the exact bug this
-        // strip/restore pair was mistakenly added to prevent.
+        // as an isolated Alt tap and pops the menu bar.
         tap_code(clockwise ? KC_MNXT : KC_MPRV);
+        consumed = true;
         return false;
     }
 
-    // No modifier claimed it, so encoder_map handles it. On the FN layer that
-    // is a hue change — open the preview window so the FN blackout steps aside
-    // and the colour being set is actually visible.
+    // Unclaimed, so the encoder map gets it. On the FN layer that is a hue
+    // change — open the preview window so the blackout steps aside and the
+    // colour being dialled in is actually visible.
     if (layer_state_is(_FN)) {
         rgb_preview_timer = timer_read32();
         rgb_preview       = true;
     }
 
+    consumed = false;
     return true;
 }
 
@@ -343,6 +365,12 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+#ifdef ENCODER_MAP_ENABLE
+    if (record->event.type == ENCODER_CW_EVENT || record->event.type == ENCODER_CCW_EVENT) {
+        return encoder_dispatch(record);
+    }
+#endif
+
     switch (keycode) {
         case NK_TOGG:
             // Handle NKRO ourselves rather than letting process_magic have it.
