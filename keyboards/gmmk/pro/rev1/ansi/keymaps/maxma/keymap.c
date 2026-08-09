@@ -154,12 +154,17 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
     }
 
     if (mods & MOD_MASK_ALT) {
-        // Opposite treatment: media keycodes should arrive unmodified, so
-        // strip Alt around the tap and put it back.
-        uint8_t held_alt = mods & MOD_MASK_ALT;
-        unregister_mods(held_alt);
+        // No strip/restore needed here, unlike the Ctrl branch above.
+        // KC_MNXT/KC_MPRV are Consumer Control usages: action.c routes them
+        // through host_consumer_send() into their own HID report
+        // (report_extra_t, report.h) that carries only a report ID and a
+        // usage code — no modifier byte exists in that report for a held
+        // Alt to ride along on. A register_mods(held_alt) here would instead
+        // emit a fresh Alt-down in the *keyboard* report with no keypress
+        // between it and the eventual physical release, which Windows reads
+        // as an isolated Alt tap and pops the menu bar — the exact bug this
+        // strip/restore pair was mistakenly added to prevent.
         tap_code(clockwise ? KC_MNXT : KC_MPRV);
-        register_mods(held_alt);
         return false;
     }
 
