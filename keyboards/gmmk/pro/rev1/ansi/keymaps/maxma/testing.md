@@ -110,6 +110,12 @@ without launching a game.
       by themselves and show magenta. This was a real hole found in review — the warning must not be
       suppressible
 - [ ] Fn+S to disarm → magenta clears, and the backlight returns to off if that's where you left it
+- [ ] **Reverse order: Fn+S to arm again, then press Fn+knob to try to turn the backlight off.** The
+      lights stay on and magenta stays lit — the safety override holds the matrix on despite your
+      press, because SOCD is still armed. This is the likelier way a user actually hits this, and
+      it's the only case that exercises the `RM_TOGG` latch-clearing path (`keymap.c:301-312`)
+- [ ] Fn+S to disarm → magenta clears, and the backlight now goes off, honouring the knob press from
+      the previous step now that nothing overrides it
 - [ ] **Replug → disarmed again**, without pressing anything
 
 ## 8. RESET_CFG (Fn+Esc)
