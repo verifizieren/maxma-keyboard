@@ -205,24 +205,14 @@ void housekeeping_task_user(void) {
 // Indicators.
 //
 // No LED index is hard-coded. Key LEDs are found by asking the keymap what
-// a position does, so the highlight follows VIA remaps instead of drifting
-// out of sync with them. Side-bar LEDs are found by their underglow flag.
+// a position does, so every indicator follows VIA remaps instead of drifting
+// out of sync with them — remap Num Lock elsewhere and the blue follows it.
+//
+// Nothing paints the side bars: they stay on the baseline colour so the left
+// and right sides always match.
 //
 // Called once per frame with a slice of the LED range, so everything is
 // clipped to [led_min, led_max).
-
-// The two side bars are underglow LEDs at the extreme left and right of the
-// matrix. bar_x is 0 for the left bar, 224 for the right.
-static void set_bar(uint8_t bar_x, uint8_t led_min, uint8_t led_max, uint8_t r, uint8_t g, uint8_t b) {
-    for (uint8_t i = led_min; i < led_max; i++) {
-        if ((g_led_config.flags[i] & LED_FLAG_UNDERGLOW) && g_led_config.point[i].x == bar_x) {
-            rgb_matrix_set_color(i, r, g, b);
-        }
-    }
-}
-
-#define LEFT_BAR_X 0
-#define RIGHT_BAR_X 224
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     // Past the warning threshold the board blinks red. Let go now and the
@@ -274,26 +264,34 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
                 }
             }
 
-            if (leds.caps_lock && keymap_key_to_keycode(_BASE, pos) == KC_CAPS) {
+            // Lock states live on the key that toggles them, and only while
+            // the lock is actually on. An indicator that is lit most of the
+            // time carries no information — which is why Num Lock is on N
+            // rather than the side bar it used to own.
+            const uint16_t base_kc = keymap_key_to_keycode(_BASE, pos);
+
+            if (leds.caps_lock && base_kc == KC_CAPS) {
                 rgb_matrix_set_color(idx, RGB_GREEN);
+            }
+            if (leds.num_lock && base_kc == KC_N) {
+                rgb_matrix_set_color(idx, RGB_BLUE);
+            }
+            if (leds.scroll_lock && base_kc == KC_F9) {
+                rgb_matrix_set_color(idx, RGB_RED);
+            }
+
+            // SOCD armed: magenta on WASD, the keys it actually affects.
+            // Painted last so it outranks everything, including the FN
+            // blackout — this warning must never be hidden.
+            if (socd_cleaner_enabled &&
+                (base_kc == KC_W || base_kc == KC_A || base_kc == KC_S || base_kc == KC_D)) {
+                rgb_matrix_set_color(idx, RGB_MAGENTA);
             }
         }
     }
 
-    // Left bar: one bar, three claimants, so they are mutually exclusive.
-    if (leds.caps_lock) {
-        set_bar(LEFT_BAR_X, led_min, led_max, RGB_GREEN);
-    } else if (leds.scroll_lock) {
-        set_bar(LEFT_BAR_X, led_min, led_max, RGB_RED);
-    } else if (leds.num_lock) {
-        set_bar(LEFT_BAR_X, led_min, led_max, RGB_BLUE);
-    }
-
-    // Right bar: the SOCD safety warning, and nothing else. It gets its own
-    // bar precisely so a lock state can never hide it.
-    if (socd_cleaner_enabled) {
-        set_bar(RIGHT_BAR_X, led_min, led_max, RGB_MAGENTA);
-    }
+    // Both side bars are left on the baseline colour deliberately. Every
+    // indicator now sits on the key it refers to, so the bars stay uniform.
 
     return false;
 }
