@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include QMK_KEYBOARD_H
+#include "socd_cleaner.h"
 
 enum layers {
     _BASE,
@@ -17,6 +18,18 @@ enum custom_keycodes {
 // No HID keycode mutes a microphone; the host has to. This sends a combo
 // unlikely to collide, to be bound as the mute hotkey in Discord/OBS/etc.
 #define MIC_MUTE C(A(S(KC_M)))
+
+// SOCD cleaning for the two WASD axes. LAST resolution: the most recently
+// pressed key wins, and releasing it reactivates the still-held opposite —
+// so a strafe reversal has no dead moment.
+//
+// PROHIBITED IN CS2 AND VALORANT. Both moved against this class of feature
+// in 2024. That is why it boots disarmed and why the right light bar warns
+// while it is live. Do not change either.
+socd_cleaner_t socd_opposing_pairs[] = {
+    {{KC_A, KC_D}, SOCD_CLEANER_LAST},  // strafe left / right
+    {{KC_W, KC_S}, SOCD_CLEANER_LAST},  // forward / back
+};
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -66,7 +79,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         RESET_CFG, KC_MPRV, KC_MPLY, KC_MNXT, KC_MSTP, KC_MUTE, KC_VOLD, KC_VOLU, MIC_MUTE, KC_SCRL, KC_PAUS, _______, _______, QK_BOOT,        RM_TOGG,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, RM_VALD, RM_VALU, KC_DEL,           _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          KC_PGUP,
-        _______, _______, _______, _______, _______, _______, _______, _______, NK_TOGG, _______, _______, _______,          _______,          KC_PGDN,
+        _______, _______, SOCDTOG, _______, _______, _______, _______, _______, NK_TOGG, _______, _______, _______,          _______,          KC_PGDN,
         _______,          _______, _______, _______, _______, _______, KC_NUM,  _______, _______, _______, _______,          _______, KC_PGUP, _______,
         _______, _______, _______,                            _______,                            _______, _______, _______, KC_HOME, KC_PGDN, KC_END
     ),
@@ -134,4 +147,10 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
     }
 
     return true;
+}
+
+void keyboard_post_init_user(void) {
+    // Always come up disarmed, whatever was last set. A power cycle is the
+    // guaranteed way back to a safe state.
+    socd_cleaner_enabled = false;
 }
