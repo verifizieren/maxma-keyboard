@@ -29,7 +29,9 @@ broken indicator are hard to read.
 - [ ] Board comes up **warm white**, solid, not an animation and not the old firmware's colours
 - [ ] Fn+`-` dims, Fn+`=` brightens
 - [ ] The brightness you set survives a replug
-- [ ] Fn+knob-press turns the backlight off; press again, back on
+- [ ] Fn+knob-press turns the backlight off
+- [ ] Press Fn+knob-press again → **backlight back on**. Leave it on — §8 below assumes the lights
+      are on when it starts
 
 ## 3. NKRO
 
@@ -116,6 +118,9 @@ Safe paths first.
 
 - [ ] Change the colour in VIA or the brightness with Fn+`=`. **Tap** Fn+Esc → warm white at default
       brightness returns
+- [ ] Turn the backlight off with Fn+knob, then **tap** Fn+Esc → the backlight comes back **on** at
+      warm white, default brightness. The tap forces the matrix on before applying the defaults —
+      "on" is part of what a compiled-default reset restores, not a state it leaves alone
 - [ ] Replug → the reset persisted
 - [ ] Hold Fn+Esc and watch: nothing for ~1.5s, then the board **blinks red**
 - [ ] **Release at the first red blink → nothing happens.** This is the escape hatch and the single
