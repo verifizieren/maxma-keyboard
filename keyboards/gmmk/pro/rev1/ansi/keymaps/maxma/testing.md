@@ -79,7 +79,7 @@ In a text editor with a paragraph of text, music playing:
 
 - [ ] Turn, nothing held → volume
 - [ ] Press → mute
-- [ ] Hold **Fn**, turn → brightness
+- [ ] Hold **Fn**, turn → colour cycles through the hue wheel (brightness stays on Fn+`-`/`=`)
 - [ ] Hold **Ctrl**, turn → cursor jumps **word by word**, both directions
 - [ ] **Release Ctrl, then type normally — no stuck Ctrl.** This one matters; it's the specific
       failure the implementation is shaped to avoid

@@ -93,7 +93,7 @@ Six behaviors: a plain turn/press, three modifier combinations, and Fn+press.
 |---|---|---|---|
 | turn | volume up / down | `encoder_map[_BASE]` | yes |
 | press | mute | ordinary matrix key | yes |
-| Fn + turn | RGB brightness up / down | `encoder_map[_FN]` | yes |
+| Fn + turn | RGB hue (colour) | `encoder_map[_FN]` | yes |
 | Ctrl + turn | previous / next **word** | custom code in `encoder_update_user` | no |
 | Alt + turn | previous / next **track** | custom code in `encoder_update_user` | no |
 | Fn + press | RGB matrix on / off | FN layer keymap entry (`RM_TOGG`) | yes |
