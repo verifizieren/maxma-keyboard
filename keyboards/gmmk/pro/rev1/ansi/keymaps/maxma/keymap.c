@@ -102,3 +102,36 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 // clang-format on
+
+// Knob dispatch.
+//
+// Returning true hands the event to encoder_map, which is the path VIA can
+// remap — so the plain turn and the Fn+turn stay user-configurable. Only
+// modifiers are intercepted here, because a modifier is not a layer and
+// encoder_map cannot see it.
+//
+// Fn deliberately does NOT appear below: Fn is a momentary layer, so holding
+// it already selects encoder_map[_FN].
+bool encoder_update_user(uint8_t index, bool clockwise) {
+    uint8_t mods = get_mods();
+
+    if (mods & MOD_MASK_CTRL) {
+        // Bare arrow, not C(KC_RGHT). Ctrl is already physically held, so the
+        // arrow picks it up on its own. Wrapping it would make QMK release the
+        // held Ctrl at the end of the tap, desyncing it from the physical key.
+        tap_code(clockwise ? KC_RGHT : KC_LEFT);
+        return false;
+    }
+
+    if (mods & MOD_MASK_ALT) {
+        // Opposite treatment: media keycodes should arrive unmodified, so
+        // strip Alt around the tap and put it back.
+        uint8_t held_alt = mods & MOD_MASK_ALT;
+        unregister_mods(held_alt);
+        tap_code(clockwise ? KC_MNXT : KC_MPRV);
+        register_mods(held_alt);
+        return false;
+    }
+
+    return true;
+}
