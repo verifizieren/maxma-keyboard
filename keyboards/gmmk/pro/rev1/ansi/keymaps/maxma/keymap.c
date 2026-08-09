@@ -154,3 +154,81 @@ void keyboard_post_init_user(void) {
     // guaranteed way back to a safe state.
     socd_cleaner_enabled = false;
 }
+
+// Indicators.
+//
+// No LED index is hard-coded. Key LEDs are found by asking the keymap what
+// a position does, so the highlight follows VIA remaps instead of drifting
+// out of sync with them. Side-bar LEDs are found by their underglow flag.
+//
+// Called once per frame with a slice of the LED range, so everything is
+// clipped to [led_min, led_max).
+
+// The two side bars are underglow LEDs at the extreme left and right of the
+// matrix. bar_x is 0 for the left bar, 224 for the right.
+static void set_bar(uint8_t bar_x, uint8_t led_min, uint8_t led_max, uint8_t r, uint8_t g, uint8_t b) {
+    for (uint8_t i = led_min; i < led_max; i++) {
+        if ((g_led_config.flags[i] & LED_FLAG_UNDERGLOW) && g_led_config.point[i].x == bar_x) {
+            rgb_matrix_set_color(i, r, g, b);
+        }
+    }
+}
+
+#define LEFT_BAR_X 0
+#define RIGHT_BAR_X 224
+
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    const led_t leds    = host_keyboard_led_state();
+    const bool  fn_held = layer_state_is(_FN);
+
+    if (fn_held) {
+        // Black out the range first, then light only what the layer defines.
+        // Recognition instead of recall — the whole point of this indicator.
+        for (uint8_t i = led_min; i < led_max; i++) {
+            rgb_matrix_set_color(i, 0, 0, 0);
+        }
+    }
+
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+            const uint8_t idx = g_led_config.matrix_co[row][col];
+            if (idx == NO_LED || idx < led_min || idx >= led_max) {
+                continue;
+            }
+            const keypos_t pos = (keypos_t){.col = col, .row = row};
+
+            if (fn_held) {
+                const uint16_t fn_kc = keymap_key_to_keycode(_FN, pos);
+                if (fn_kc != KC_TRNS && fn_kc != KC_NO) {
+                    rgb_matrix_set_color(idx, RGB_WHITE);
+                }
+                // Amber on the NKRO key while NKRO is off, so the warning is
+                // only present when you are already looking at the layer.
+                if (fn_kc == NK_TOGG && !keymap_config.nkro) {
+                    rgb_matrix_set_color(idx, RGB_ORANGE);
+                }
+            }
+
+            if (leds.caps_lock && keymap_key_to_keycode(_BASE, pos) == KC_CAPS) {
+                rgb_matrix_set_color(idx, RGB_GREEN);
+            }
+        }
+    }
+
+    // Left bar: one bar, three claimants, so they are mutually exclusive.
+    if (leds.caps_lock) {
+        set_bar(LEFT_BAR_X, led_min, led_max, RGB_GREEN);
+    } else if (leds.scroll_lock) {
+        set_bar(LEFT_BAR_X, led_min, led_max, RGB_RED);
+    } else if (leds.num_lock) {
+        set_bar(LEFT_BAR_X, led_min, led_max, RGB_BLUE);
+    }
+
+    // Right bar: the SOCD safety warning, and nothing else. It gets its own
+    // bar precisely so a lock state can never hide it.
+    if (socd_cleaner_enabled) {
+        set_bar(RIGHT_BAR_X, led_min, led_max, RGB_MAGENTA);
+    }
+
+    return false;
+}
