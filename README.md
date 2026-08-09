@@ -13,8 +13,10 @@ the SOCD cleaner (read that section before arming it). The hardware verification
 
 ```
 C:\Users\maxma\source\
-  qmk_firmware\        2023 QMK reference clone. Read-only, never modified.
-  qmk_firmware_new\    Current upstream QMK, pristine. Updated with `git pull`. Never edited.
+  qmk_firmware\        2023 QMK reference clone. No firmware code lives here — it holds design-spec
+                       and process artifacts under docs/superpowers/, but nothing that gets compiled.
+  qmk_firmware_new\    Current upstream QMK, pristine. Updated with `git pull`. Genuinely never
+                       touched — this is the one that actually builds the firmware.
   maxma-keyboard\      This repo. github.com/verifizieren/maxma-keyboard
 ```
 
