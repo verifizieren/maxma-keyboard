@@ -311,6 +311,23 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         }
     }
 
+    // Caps Lock floods every key green — impossible to miss, and the way the
+    // previous keymap on this board did it. Key LEDs only; the side bars stay
+    // on the baseline colour like everything else.
+    //
+    // Skipped while Fn is held: the FN highlight is also green, so flooding
+    // here would erase the distinction between "this key does something on
+    // the layer" and "Caps is on". Painted before the per-key indicators
+    // below so lock states, the status light and the SOCD warning all still
+    // show through on top.
+    if (leds.caps_lock && !fn_held) {
+        for (uint8_t i = led_min; i < led_max; i++) {
+            if (g_led_config.flags[i] & LED_FLAG_KEYLIGHT) {
+                rgb_matrix_set_color(i, RGB_GREEN);
+            }
+        }
+    }
+
     for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
         for (uint8_t col = 0; col < MATRIX_COLS; col++) {
             const uint8_t idx = g_led_config.matrix_co[row][col];
@@ -337,9 +354,6 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             // rather than the side bar it used to own.
             const uint16_t base_kc = keymap_key_to_keycode(_BASE, pos);
 
-            if (leds.caps_lock && base_kc == KC_CAPS) {
-                rgb_matrix_set_color(idx, RGB_GREEN);
-            }
             if (leds.num_lock && base_kc == KC_N) {
                 rgb_matrix_set_color(idx, RGB_BLUE);
             }
